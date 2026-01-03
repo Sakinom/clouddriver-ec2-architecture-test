@@ -11,6 +11,7 @@ import { Dns } from '../construct/dns';
 import { LoadBalancer } from '../construct/loadbalancer';
 import { CloudTrail } from '../construct/cloudtrail';
 import { Frontend } from '../construct/frontend';
+import { Canary } from '../construct/canary';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -98,6 +99,7 @@ export class Ec2Stack extends Stack {
       vpc: networking.vpc,
       cmk: cmk,
       publicAlbListener: loadBalancer.publicAlbListener,
+      cloudWatchLogsRetention: props.cloudWatchLogsRetention,
     });
 
     // CloudFront WAFのARNをプロパティから取得
@@ -112,22 +114,20 @@ export class Ec2Stack extends Stack {
     });
 
     // 監視機能の設定
-    // const monitoring = new Monitoring(this, "Monitoring", {
-    //   logGroup: ec2App.logGroup,
-    //   notificationRecipientEmail: props.notificationRecipientEmail,
-    //   autoScalingGroup: ec2App.appAsg,
-    //   cloudTrailLogGroup: cloudTrail.cloudWatchLogGroup,
-    //   env: props.env,
-    // });
+    const monitoring = new Monitoring(this, "Monitoring", {
+      appLogGroup: ec2App.appLogGroup,
+      notificationRecipientEmail: props.notificationRecipientEmail,
+      autoScalingGroup: ec2App.appAsg,
+      cloudTrailLogGroup: cloudTrail.cloudWatchLogGroup,
+      env: props.env,
+    });
 
     // Canary外形監視の設定
-    // new Canary(this, "Canary", {
-    //   appName: props.appName,
-    //   environment: props.environment,
-    //   canaryUrl: props.canaryUrl,
-    //   snsTopic: monitoring.snsTopic,
-    //   s3AccessLogBucket: s3AccessLogBucket,
-    // });
+    new Canary(this, "Canary", {
+      canaryUrl: props.canaryUrl,
+      snsTopic: monitoring.snsTopic,
+      s3AccessLogBucket: s3AccessLogBucket,
+    });
 
     const frontend = new Frontend(this, "Frontend", {
       bucketLogRetention: props.bucketLogRetention,

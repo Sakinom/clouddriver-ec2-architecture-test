@@ -34,7 +34,7 @@ export const parameter: EnvironmentParameter = {
   description: "CloudDriver EC2 Infrastructure Test Stack",
   vpcCidr: "10.0.0.0/16",
   maxAzs: 2,
-  natGateways: 1,
+  natGateways: 2,
   domainName: "00770.clouddriver-exam.net",
   cloudfrontCertificate:
     "arn:aws:acm:us-east-1:577018705349:certificate/9e6db63f-1c21-4b71-add5-08215626d566",
