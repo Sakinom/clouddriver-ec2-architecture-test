@@ -89,7 +89,7 @@ export class Ec2App extends Construct {
     );
     userdata.addCommands(
       'sudo yum -y install amazon-cloudwatch-agent',
-      '/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:/cloudwatch/agent/ec2/app -s',
+      'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:/cloudwatch/agent/ec2/app -s',
     );
 
     // ------------ AppServers (AutoScaling) ---------------
