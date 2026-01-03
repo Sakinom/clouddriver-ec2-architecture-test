@@ -63,11 +63,6 @@ export class Frontend extends Construct {
       serverAccessLogsPrefix: "cloudfront-log-bucket-access-logs/",
     });
 
-    // CloudFrontのディストリビューションを作成
-    const oai = new cloudfront.OriginAccessIdentity(this, "OAI", {
-      comment: `OAI for static site`,
-    });
-
     // クリックジャッキング対策などのセキュリティヘッダを付与
     const securityHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
       this,
@@ -93,15 +88,23 @@ export class Frontend extends Construct {
     );
 
     this.distribution = new cloudfront.Distribution(this, "Distribution", {
-      // デフォルトビヘイビア: S3の静的コンテンツ（Next.js）
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(
-          this.staticSiteBucket
-        ),
+        origin: new origins.LoadBalancerV2Origin(props.publicAlb),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // TODO: CACHING_OPTIMIZEDに変更する
-        compress: true,
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         responseHeadersPolicy: securityHeadersPolicy,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+      },
+      additionalBehaviors: {
+        "/*": {
+          origin: origins.S3BucketOrigin.withOriginAccessControl(
+            this.staticSiteBucket
+          ),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // TODO: CACHING_OPTIMIZEDに変更する
+          compress: true,
+          responseHeadersPolicy: securityHeadersPolicy,
+        },
       },
       defaultRootObject: "index.html",
       errorResponses: [
@@ -125,6 +128,23 @@ export class Frontend extends Construct {
       logFilePrefix: "cloudfront-access-logs/",
       ...(props.cloudfrontWebAclArn && { webAclId: props.cloudfrontWebAclArn }),
     });
+
+    // S3バケット（静的コンテンツ用）にCloudFrontからのアクセスを許可する
+    this.staticSiteBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:GetObject"],
+        principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
+        resources: [this.staticSiteBucket.arnForObjects("*")],
+        conditions: {
+          StringEquals: {
+            "AWS:SourceArn": `arn:aws:cloudfront::${
+              cdk.Stack.of(this).account
+            }:distribution/${this.distribution.distributionId}`,
+          },
+        },
+      })
+    );
 
     // CloudFrontログ設定のためのIAMポリシー
     cloudfrontLogBucket.addToResourcePolicy(

@@ -20,6 +20,8 @@ export interface LoadBalancerProps {
   };
 }
 
+const SOURCE_PREFIX_LIST_ID = 'pl-58a04531' // CloudFrontのプレフィックスリストID（東京リージョン）
+
 export class LoadBalancer extends Construct {
   public readonly publicAlb: elbv2.ApplicationLoadBalancer;
   public readonly publicAlbSg: ec2.SecurityGroup;
@@ -37,9 +39,9 @@ export class LoadBalancer extends Construct {
     });
 
     this.publicAlbSg.addIngressRule(
-      ec2.Peer.anyIpv4(),
+      ec2.Peer.prefixList(SOURCE_PREFIX_LIST_ID),
       ec2.Port.tcp(443),
-      "Allow inbound HTTPS traffic"
+      "Allow inbound HTTPS traffic from CloudFront only"
     );
 
     // Public Application Load Balancer（外部→Apache+CentOS用）
