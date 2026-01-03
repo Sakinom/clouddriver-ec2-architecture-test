@@ -104,12 +104,12 @@ export class Ec2Stack extends Stack {
     const cloudfrontWebAclArn = props.webAclArn;
 
     // CloudTrailの設定
-    // const cloudTrail = new CloudTrail(this, "CloudTrail", {
-    //   cmk: cmk,
-    //   cloudTrailLogRetention: props.cloudTrailLogRetention,
-    //   s3AccessLogBucket: s3AccessLogBucket,
-    //   env: props.env,
-    // });
+    const cloudTrail = new CloudTrail(this, "CloudTrail", {
+      cmk: cmk,
+      cloudTrailLogRetention: props.cloudTrailLogRetention,
+      s3AccessLogBucket: s3AccessLogBucket,
+      env: props.env,
+    });
 
     // 監視機能の設定
     // const monitoring = new Monitoring(this, "Monitoring", {
