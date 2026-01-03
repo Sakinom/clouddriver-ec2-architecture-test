@@ -143,7 +143,6 @@ export class Ec2Stack extends Stack {
     // Route53レコードの作成
     dns.createDnsRecords(
       frontend.distribution,
-      loadBalancer.publicAlb,
       props.domainName
     );
 

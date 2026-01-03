@@ -26,7 +26,6 @@ export class Dns extends Construct {
     // ACM証明書を作成（Route53で自動検証）
     this.albCertificate = new acm.Certificate(this, "AlbCertificate", {
       domainName: props.domainName,
-      subjectAlternativeNames: [`api.${props.domainName}`],
       validation: acm.CertificateValidation.fromDns(this.hostedZone),
     });
   }
@@ -34,7 +33,6 @@ export class Dns extends Construct {
   // Route53レコードを作成するメソッド
   public createDnsRecords(
     cloudFrontDistribution: IDistribution,
-    alb: ILoadBalancerV2,
     domainName: string
   ) {
     // CloudFrontのAレコード
@@ -43,15 +41,6 @@ export class Dns extends Construct {
       recordName: domainName,
       target: route53.RecordTarget.fromAlias(
         new targets.CloudFrontTarget(cloudFrontDistribution)
-      ),
-    });
-
-    // ALBのAレコード（api サブドメイン用）
-    new route53.ARecord(this, "AlbARecord", {
-      zone: this.hostedZone,
-      recordName: `api.${domainName}`,
-      target: route53.RecordTarget.fromAlias(
-        new targets.LoadBalancerTarget(alb)
       ),
     });
   }
