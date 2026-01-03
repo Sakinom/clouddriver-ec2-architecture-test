@@ -4,26 +4,21 @@ import {
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export interface CloudFrontWafProps {
-  appName: string;
-  environment: string;
-}
-
 export class CloudFrontWaf extends Construct {
   public readonly webAcl: wafv2.CfnWebACL;
 
-  constructor(scope: Construct, id: string, props: CloudFrontWafProps) {
+  constructor(scope: Construct, id: string) {
     super(scope, id);
 
     // ------------ CloudFront用WAF (CLOUDFRONT scope) ---------------
     // CloudFront用WAFはus-east-1リージョンでのみ作成可能
     this.webAcl = new wafv2.CfnWebACL(this, 'CloudFrontWebAcl', {
-      name: `${props.appName}-${props.environment.toLowerCase()}-cloudfront-waf`,
+      name: `${cdk.Aws.ACCOUNT_ID}-cloudfront-waf`,
       scope: 'CLOUDFRONT',
       defaultAction: {
         allow: {},
       },
-      description: `WAF for ${props.appName} CloudFront distribution`,
+      description: `WAF for CloudFront distribution`,
       rules: [
         // 1. SQL Injection Protection
         {
@@ -124,12 +119,12 @@ export class CloudFrontWaf extends Construct {
       visibilityConfig: {
         sampledRequestsEnabled: true,
         cloudWatchMetricsEnabled: true,
-        metricName: `${props.appName}CloudFrontWebAclMetric`,
+        metricName: `CloudFrontWebAclMetric`,
       },
     });
 
     const bucket = new cdk.aws_s3.Bucket(this, "awsWafLogsBucket", {
-      bucketName: `aws-waf-logs-${props.appName}-${props.environment.toLowerCase()}-${cdk.Aws.ACCOUNT_ID}-us-east-1`,
+      bucketName: `aws-waf-logs-${cdk.Aws.ACCOUNT_ID}-us-east-1`,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,

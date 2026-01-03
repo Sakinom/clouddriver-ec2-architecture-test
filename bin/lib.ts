@@ -7,20 +7,18 @@ import { parameter } from '../parameter';
 const app = new cdk.App();
 
 // CloudFront用WAFスタック（us-east-1リージョン）
-// const cloudfrontWafStack = new CloudFrontWafStack(
-//   app,
-//   `CloudFrontWaf`,
-//   {
-//     appName: parameter.appName,
-//     environment: parameter.environment,
-//     env: {
-//       account: parameter.env.account,
-//       region: "us-east-1", // CloudFront WAFはus-east-1でのみ作成可能
-//     },
-//     crossRegionReferences: true,
-//     description: `CloudFront WAF Stack (${parameter.environment})`,
-//   }
-// );
+const cloudfrontWafStack = new CloudFrontWafStack(
+  app,
+  `CloudFrontWaf`,
+  {
+    env: {
+      account: parameter.env.account,
+      region: "us-east-1", // CloudFront WAFはus-east-1でのみ作成可能
+    },
+    crossRegionReferences: true,
+    description: `CloudFront WAF Stack`,
+  }
+);
 
 new Ec2Stack(app, `Ec2Stack`, {
   env: parameter.env,
