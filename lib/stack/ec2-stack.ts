@@ -12,6 +12,8 @@ import { LoadBalancer } from '../construct/loadbalancer';
 import { CloudTrail } from '../construct/cloudtrail';
 import { Frontend } from '../construct/frontend';
 import { Canary } from '../construct/canary';
+import { GuardDuty } from '../construct/guardduty';
+import { AwsConfig } from '../construct/awsconfig';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -145,18 +147,14 @@ export class Ec2Stack extends Stack {
       props.domainName
     );
 
-    // // GuardDuty setup
-    // new GuardDuty(this, "GuardDuty", {
-    //   appName: props.appName,
-    //   environment: props.environment,
-    //   notificationRecipientEmail: props.notificationRecipientEmail,
-    // });
+    // GuardDuty setup
+    new GuardDuty(this, "GuardDuty", {
+      notificationRecipientEmail: props.notificationRecipientEmail,
+    });
 
-    // // AWS Config setup
-    // new AwsConfig(this, "AwsConfig", {
-    //   appName: props.appName,
-    //   environment: props.environment,
-    //   bucketLogRetention: props.bucketLogRetention,
-    // });
+    // AWS Config setup
+    new AwsConfig(this, "AwsConfig", {
+      bucketLogRetention: props.bucketLogRetention,
+    });
   }
 }
