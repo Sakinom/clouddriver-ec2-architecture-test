@@ -1,0 +1,59 @@
+[tools]
+node = '22'
+
+[tasks]
+
+# ==============================================
+# 開発環境タスク
+# ==============================================
+
+[tasks.init]
+description = "プロジェクトの初期セットアップ"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = """
+echo '初期セットアップを開始...' &&
+echo 'Node.js バージョン確認中...' && node --version &&
+echo 'pnpm バージョン確認中...' && pnpm --version &&
+echo '依存関係をインストール中...' && pnpm install &&
+echo 'TypeScriptをビルド中...' && pnpm run build &&
+echo 'CDKの合成を実行中...' && pnpm run synth &&
+echo '初期セットアップが完了しました！'
+"""
+
+[tasks.build]
+description = "TypeScriptのビルド"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = "echo 'TypeScriptをビルド中...' && pnpm run build"
+
+[tasks.synth]
+description = "CDKの合成"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = "echo 'CDKの合成を実行中...' && pnpm run synth"
+
+[tasks.diff]
+description = "CDK差分確認"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = """
+echo 'CDK差分を確認中...' &&
+pnpm run build && 
+npx aws-cdk diff --all
+"""
+
+[tasks.bootstrap]
+description = "ブートストラップ"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = "echo 'ブートストラップを実行...' && npx cdk bootstrap"
+
+[tasks.deploy]
+description = "デプロイ（ブートストラップ済み）"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = """
+echo 'デプロイを実行...' &&
+pnpm install && pnpm run build &&
+npx aws-cdk deploy --all
+"""
+
+[tasks.destroy]
+description = "リソース削除"
+env = { AWS_PROFILE = "switched-clouddriver" }
+run = "echo 'リソースを削除...' && npx aws-cdk destroy --all"
