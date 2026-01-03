@@ -5,7 +5,6 @@ import {
   aws_elasticloadbalancingv2 as elbv2,
   aws_iam as iam,
   aws_s3 as s3,
-  aws_wafv2 as wafv2,
   region_info as ri,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
@@ -25,11 +24,9 @@ export class LoadBalancer extends Construct {
   public readonly publicAlb: elbv2.ApplicationLoadBalancer;
   public readonly publicAlbSg: ec2.SecurityGroup;
   public readonly publicAlbListener: elbv2.ApplicationListener;
-  private readonly props: LoadBalancerProps;
 
   constructor(scope: Construct, id: string, props: LoadBalancerProps) {
     super(scope, id);
-    this.props = props;
 
     // ------------ Public Application LoadBalancer ---------------
     // Public ALBのセキュリティグループ
