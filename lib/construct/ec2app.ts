@@ -52,39 +52,6 @@ export class Ec2App extends Construct {
       'chown apache.apache /var/www/html/index.html',
     );
 
-    const privateAzs = props.vpc.selectSubnets({
-      subnetGroupName: 'Private',
-    }).availabilityZones;
-
-    const instanceIdTargets: elbv2targets.InstanceIdTarget[] = new Array(0);
-    for (let i = 0; i < 2; i++) {
-      const instance = new ec2.Instance(this, `AppInstance${i}`, {
-        vpc: props.vpc,
-        availabilityZone: privateAzs[i % privateAzs.length],
-        vpcSubnets: props.vpc.selectSubnets({
-          subnetGroupName: 'Private',
-        }),
-        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
-        machineImage: new ec2.AmazonLinuxImage({
-          generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-        }),
-        securityGroup: appSg,
-        role: ssmInstanceRole,
-        userData: userdata,
-        blockDevices: [
-          {
-            deviceName: '/dev/xvda',
-            volume: ec2.BlockDeviceVolume.ebs(10, {
-              encrypted: true,
-            }),
-          },
-        ],
-      });
-      // Tags for AppServers
-      cdk.Tags.of(instance).add('Name', 'AppServer' + i, { applyToLaunchedInstances: true });
-      instanceIdTargets.push(new elbv2targets.InstanceIdTarget(instance.instanceId, 80));
-    }
-
     // ------------ AppServers (AutoScaling) ---------------
 
     // Auto Scaling Group for AppServers
@@ -128,7 +95,7 @@ export class Ec2App extends Construct {
     props.publicAlbListener.addTargets('AppAsgTarget', {
       protocol: elbv2.ApplicationProtocol.HTTP,
       port: 80,
-      targets: [appAsg, ...instanceIdTargets],
+      targets: [appAsg],
       deregistrationDelay: cdk.Duration.seconds(30),
     });
   }
