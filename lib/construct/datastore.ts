@@ -7,6 +7,7 @@ import {
   aws_iam as iam,
   RemovalPolicy,
   Duration,
+  aws_applicationautoscaling as autoscaling,
 } from 'aws-cdk-lib';
 import { IDatabaseCluster } from 'aws-cdk-lib/aws-rds';
 import { Construct } from 'constructs';
@@ -60,7 +61,13 @@ export class Datastore extends Construct {
         instanceIdentifier: `datastore-aurora-instance-${props.env.account}`,
         enablePerformanceInsights: false,
       }),
-      readers: [],
+      readers: [
+        rds.ClusterInstance.provisioned('ReaderInstance1', {
+          instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
+          instanceIdentifier: `datastore-aurora-reader-instance-${props.env.account}`,
+          enablePerformanceInsights: false,
+        }),
+      ],
       vpc: props.vpc,
       removalPolicy: RemovalPolicy.DESTROY, // TODO: RETAINに変更する
       defaultDatabaseName: `db_${props.env.account}`,
@@ -74,6 +81,23 @@ export class Datastore extends Construct {
     this.dbCluster = cluster;
     if (!cluster.secret) throw new Error('cluster.secret is undefined');
     this.dbSecret = cluster.secret;
+
+    // Auroraリーダーレプリカの自動スケーリング設定
+    // const scalableTarget = new autoscaling.ScalableTarget(this, 'ReaderAutoScalingTarget', {
+    //   serviceNamespace: autoscaling.ServiceNamespace.RDS,
+    //   scalableDimension: 'rds:cluster:ReadReplicaCount',
+    //   resourceId: `cluster:${cluster.clusterIdentifier}`,
+    //   minCapacity: 0,
+    //   maxCapacity: 4,
+    // });
+    // scalableTarget.node.addDependency(cluster);
+
+    // scalableTarget.scaleToTrackMetric('ReaderCpuScaling', {
+    //   targetValue: 80,
+    //   predefinedMetric: autoscaling.PredefinedMetric.RDS_READER_AVERAGE_CPU_UTILIZATION,
+    //   scaleInCooldown: Duration.seconds(300),
+    //   scaleOutCooldown: Duration.seconds(300),
+    // });
 
     // AWS Backup用のサービスロール
     const backupRole = new iam.Role(this, 'BackupRole', {
