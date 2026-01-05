@@ -14,6 +14,7 @@ import { Frontend } from '../construct/frontend';
 import { Canary } from '../construct/canary';
 import { GuardDuty } from '../construct/guardduty';
 import { AwsConfig } from '../construct/awsconfig';
+import { ElastiCache } from '../construct/elasticache';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -155,5 +156,11 @@ export class Ec2Stack extends Stack {
     new AwsConfig(this, "AwsConfig", {
       bucketLogRetention: props.bucketLogRetention,
     });
+
+    const elasticache = new ElastiCache(this, "ElastiCache", {
+      vpc: networking.vpc,
+      appSg: ec2App.appServerSecurityGroup,
+    });
+    elasticache.redisEndpointParameter.grantRead(ec2App.appAsg.role);
   }
 }

@@ -17,7 +17,7 @@ export interface Ec2AppProps {
 
 export class Ec2App extends Construct {
   public readonly appServerSecurityGroup: ec2.ISecurityGroup;
-  public readonly appAsg: autoscaling.IAutoScalingGroup;
+  public readonly appAsg: autoscaling.AutoScalingGroup;
   public readonly appLogGroup: logs.ILogGroup;
 
   constructor(scope: Construct, id: string, props: Ec2AppProps) {
@@ -90,6 +90,9 @@ export class Ec2App extends Construct {
     userdata.addCommands(
       'sudo yum -y install amazon-cloudwatch-agent',
       'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:/cloudwatch/agent/ec2/app -s',
+    );
+    userdata.addCommands(
+      `export REDIS_ENDPOINT=$(aws ssm get-parameter --name "/app/redis/endpoint" --query "Parameter.Value" --output text --region ${cdk.Stack.of(this).region})`
     );
 
     // ------------ AppServers (AutoScaling) ---------------
