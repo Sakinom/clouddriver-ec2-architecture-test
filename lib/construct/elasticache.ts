@@ -2,6 +2,7 @@ import { Construct } from "constructs";
 import { CfnReplicationGroup, CfnSubnetGroup } from 'aws-cdk-lib/aws-elasticache';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as appscaling from 'aws-cdk-lib/aws-applicationautoscaling';
 
 interface ElastiCacheProps {
   vpc: ec2.IVpc;
@@ -38,6 +39,18 @@ export class ElastiCache extends Construct {
       multiAzEnabled: true,
     });
     redis.addDependency(subnetGroup);
+
+    // const replicaScalableTarget = new appscaling.ScalableTarget(this, 'ElastiCacheRedisReplicasScalableTarget', {
+    //   serviceNamespace: appscaling.ServiceNamespace.ELASTICACHE,
+    //   scalableDimension: 'elasticache:replication-group:Replicas',
+    //   minCapacity: 1,
+    //   maxCapacity: 5,
+    //   resourceId: `replication-group/${redis.ref}`,
+    // });
+    // replicaScalableTarget.scaleToTrackMetric('ElastiCacheRedisReplicasCPUUtilization', {
+    //   targetValue: 50,
+    //   predefinedMetric: appscaling.PredefinedMetric.ELASTICACHE_PRIMARY_ENGINE_CPU_UTILIZATION,
+    // });
 
     const redisEndpointParameter = new ssm.StringParameter(this, 'RedisEndpointParam', {
       parameterName: '/app/redis/endpoint',
