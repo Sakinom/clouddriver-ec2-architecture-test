@@ -61,6 +61,7 @@ export class LoadBalancer extends Construct {
         port: 443,
         certificates: [props.albCertificate],
         sslPolicy: elbv2.SslPolicy.RECOMMENDED_TLS,
+        open: false, // セキュリティグループルールの自動追加を無効化（プレフィックスリストのみ許可）
       }
     );
 
