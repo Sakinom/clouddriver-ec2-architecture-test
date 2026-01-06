@@ -30,11 +30,12 @@ export class ElastiCache extends Construct {
     const redis = new CfnReplicationGroup(this, "ReplicationGroup", {
       replicationGroupDescription: "Elastic Cache Replication Group",
       numCacheClusters: 2,
-      automaticFailoverEnabled: false,
+      automaticFailoverEnabled: true,
       engine: 'redis',
       cacheNodeType: 'cache.t4g.micro',
       cacheSubnetGroupName: subnetGroup.ref,
-      securityGroupIds:[elasticacheSg.securityGroupId],
+      securityGroupIds: [elasticacheSg.securityGroupId],
+      multiAzEnabled: true,
     });
     redis.addDependency(subnetGroup);
 
