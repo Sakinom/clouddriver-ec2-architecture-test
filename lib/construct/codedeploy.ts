@@ -1,4 +1,4 @@
-import { aws_s3 as s3, aws_codedeploy as codedeploy, aws_autoscaling as autoscaling } from "aws-cdk-lib";
+import { aws_s3 as s3, aws_codedeploy as codedeploy, aws_autoscaling as autoscaling, aws_iam as iam } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as cdk from "aws-cdk-lib";
 
@@ -25,12 +25,34 @@ export class CodeDeploy extends Construct {
       applicationName: 'CloudDriverEc2ArchitectureTestApp',
     });
 
-    new codedeploy.ServerDeploymentGroup(this, 'CodeDeployDeploymentGroup', {
+    const deploymentGroup = new codedeploy.ServerDeploymentGroup(this, 'CodeDeployDeploymentGroup', {
       application: application,
       deploymentGroupName: 'CloudDriverEc2ArchitectureTestDeploymentGroup',
       autoScalingGroups: [props.asg],
       deploymentConfig: codedeploy.ServerDeploymentConfig.ALL_AT_ONCE,
-      // TODO: ブルー/グリーンデプロイメントに変更
+      // cdkがEC2のブルー/グリーンデプロイメントに対応していないため、コンソールにてAutoScalingGroupsとLoadBalancerの設定を追加済み
     });
+
+    deploymentGroup.role?.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSCodeDeployRole')
+    );
+
+    deploymentGroup.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+      actions: [
+        "iam:PassRole",
+        "ec2:CreateTags",
+        "ec2:RunInstances",
+        "autoscaling:Describe*",
+        "autoscaling:CreateAutoScalingGroup",
+        "autoscaling:UpdateAutoScalingGroup",
+        "autoscaling:DeleteAutoScalingGroup",
+        "autoscaling:PutLifecycleHook",
+        "autoscaling:DeleteLifecycleHook",
+        "autoscaling:CompleteLifecycleAction",
+        "autoscaling:PutScalingPolicy",
+        "autoscaling:DeleteScalingPolicy"
+      ],
+      resources: ["*"],
+    }));
   }
 }
