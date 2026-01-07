@@ -62,7 +62,23 @@ export class Ec2App extends Construct {
     const cwAgentConfig = new ssm.StringParameter(this, 'CwAgentConfig', {
       parameterName: '/cloudwatch/agent/ec2/app',
       stringValue: JSON.stringify({
+        metrics: {
+          append_dimensions: {
+            InstanceId: "${aws:InstanceId}"
+          },
+          metrics_collected: {
+            mem: {
+              measurement: [
+                "mem_used_percent", // メモリ使用率
+                "mem_total",        // 合計メモリ
+                "mem_used"          // 使用済みメモリ
+              ],
+              metrics_collection_interval: 60
+            }
+          }
+        },
         logs: {
+          force_flush_interval: 5,
           logs_collected: {
             files: {
               collect_list: [
