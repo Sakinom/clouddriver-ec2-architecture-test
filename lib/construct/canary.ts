@@ -44,11 +44,21 @@ export class Canary extends Construct {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchSyntheticsFullAccess'),
       ],
     });
+    canaryRole.addToPolicy(new iam.PolicyStatement({
+      actions: ['cloudwatch:PutMetricData'],
+      resources: ['*'],
+      conditions: {
+        StringEquals: {
+          'cloudwatch:namespace': 'CloudWatchSynthetics',
+        },
+      },
+    }));
 
     // S3バケットへの書き込み権限を追加
-    this.artifactsBucket.grantWrite(canaryRole);
+    this.artifactsBucket.grantReadWrite(canaryRole);
 
     // CloudWatch Canaryの作成
     this.canary = new synthetics.Canary(this, 'WebsiteCanary', {
@@ -72,7 +82,8 @@ const checkWebsite = async function () {
 
     try {
         const response = await synthetics.executeStep('checkWebsite', async function () {
-            return await synthetics.getPage().goto(url, {
+            const page = await synthetics.getPage();
+            return await page.goto(url, {
                 waitUntil: 'networkidle0',
                 timeout: 30000
             });
@@ -96,7 +107,7 @@ exports.handler = async () => {
         `),
         handler: 'index.handler',
       }),
-      runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_6_2,
+      runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_11_0,
       role: canaryRole,
       artifactsBucketLocation: {
         bucket: this.artifactsBucket,
