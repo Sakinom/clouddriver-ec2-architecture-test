@@ -102,6 +102,7 @@ export class GitHubOidc extends Construct {
           "codedeploy:GetDeploymentConfig",
           "codedeploy:RegisterApplicationRevision",
           "codedeploy:GetApplication",
+          "codedeploy:GetApplicationRevision",
         ],
         resources: [
           `arn:aws:codedeploy:${props.env.region}:${props.env.account}:application:CloudDriverEc2ArchitectureTestApp`,
