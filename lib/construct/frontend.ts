@@ -93,10 +93,10 @@ export class Frontend extends Construct {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         responseHeadersPolicy: securityHeadersPolicy,
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
       },
       additionalBehaviors: {
-        "/*": {
+        "/assets/*": {
           origin: origins.S3BucketOrigin.withOriginAccessControl(
             this.staticSiteBucket
           ),
