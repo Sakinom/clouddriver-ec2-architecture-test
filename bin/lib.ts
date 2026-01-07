@@ -36,4 +36,5 @@ new Ec2Stack(app, `Ec2Stack`, {
   datastore: parameter.datastore,
   appService: parameter.appService,
   webAclArn: parameter.webAclArn,
+  github: parameter.github,
 });

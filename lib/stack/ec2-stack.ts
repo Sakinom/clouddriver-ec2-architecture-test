@@ -15,6 +15,7 @@ import { Canary } from '../construct/canary';
 import { GuardDuty } from '../construct/guardduty';
 import { AwsConfig } from '../construct/awsconfig';
 import { ElastiCache } from '../construct/elasticache';
+import { GitHubOidc } from '../construct/github-oidc';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -41,12 +42,17 @@ export interface Ec2StackProps extends StackProps {
     memory: number;
   };
   webAclArn?: string;
+  github: {
+    organization: string;
+    repositories: string[];
+  };
 }
 
 export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
+    // 共通で使用するKMSキーを作成
     const cmk = new Key(this, "CMK", {
       enableKeyRotation: true,
       description: "CMK for Ec2App",
@@ -69,13 +75,15 @@ export class Ec2Stack extends Stack {
       enforceSSL: true,
     });
 
+    // ネットワーキングの設定（VPC、サブネット、NATゲートウェイなど）
     const networking = new Networking(this, "Networking", {
       vpcCidr: props.vpcCidr,
-      maxAzs: props.maxAzs, // 2
-      natGateways: props.natGateways, // 1
+      maxAzs: props.maxAzs,
+      natGateways: props.natGateways,
       s3AccessLogBucket: s3AccessLogBucket,
     });
 
+    // データストアの設定（RDS/Aurora）
     const datastore = new Datastore(this, "Datastore", {
       vpc: networking.vpc,
       cmk: cmk,
@@ -90,6 +98,7 @@ export class Ec2Stack extends Stack {
       domainName: props.domainName,
     });
 
+    // ロードバランサーの設定
     const loadBalancer = new LoadBalancer(this, "LoadBalancer", {
       vpc: networking.vpc,
       bucketLogRetention: props.bucketLogRetention,
@@ -98,6 +107,7 @@ export class Ec2Stack extends Stack {
       env: props.env,
     });
 
+    // EC2アプリケーションの設定
     const ec2App = new Ec2App(this, "Ec2App", {
       vpc: networking.vpc,
       cmk: cmk,
@@ -132,6 +142,7 @@ export class Ec2Stack extends Stack {
       s3AccessLogBucket: s3AccessLogBucket,
     });
 
+    // フロントエンドの設定
     const frontend = new Frontend(this, "Frontend", {
       bucketLogRetention: props.bucketLogRetention,
       publicAlb: loadBalancer.publicAlb,
@@ -157,10 +168,20 @@ export class Ec2Stack extends Stack {
       bucketLogRetention: props.bucketLogRetention,
     });
 
+    // ElastiCache Redisの設定
     const elasticache = new ElastiCache(this, "ElastiCache", {
       vpc: networking.vpc,
       appSg: ec2App.appServerSecurityGroup,
     });
     elasticache.redisEndpointParameter.grantRead(ec2App.appAsg.role);
+
+    // GitHub Actions OIDC設定
+    new GitHubOidc(this, "GitHubOidc", {
+      githubOrganization: props.github.organization,
+      githubRepositories: props.github.repositories,
+      s3Bucket: frontend.staticSiteBucket,
+      cloudfrontDistribution: frontend.distribution,
+      env: props.env,
+    });
   }
 }

@@ -24,6 +24,10 @@ export interface EnvironmentParameter {
     memory: number;
   };
   webAclArn?: string;
+  github: {
+    organization: string;
+    repositories: string[];
+  };
 }
 
 export const parameter: EnvironmentParameter = {
@@ -50,5 +54,9 @@ export const parameter: EnvironmentParameter = {
   appService: {
     cpu: 2048, // 2 vCPU
     memory: 4096, // 4 GB
+  },
+  github: {
+    organization: "clouddriver-exam", // TODO: 実際のGitHub組織名に変更する必要がある
+    repositories: ["clouddriver-ec2-architecture-test-app"], // TODO: 実際のリポジトリ名に変更する必要がある
   },
 };
