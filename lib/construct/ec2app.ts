@@ -52,17 +52,18 @@ export class Ec2App extends Construct {
     // ------------ AppServers (Ec2.Instance) ---------------
 
     // InstanceProfile for AppServers
-    const ssmInstanceRole = new iam.Role(this, 'SsmInstanceRole', {
+    const instanceRole = new iam.Role(this, 'InstanceRole', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       path: '/',
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3ReadOnlyAccess'),
       ],
     });
 
     // Grant read access to S3 Static Site Bucket
-    props.s3StaticSiteBucket.grantReadWrite(ssmInstanceRole);
+    props.s3StaticSiteBucket.grantReadWrite(instanceRole);
 
     const cwAgentConfig = new ssm.StringParameter(this, 'CwAgentConfig', {
       parameterName: '/cloudwatch/agent/ec2/app',
@@ -103,13 +104,13 @@ export class Ec2App extends Construct {
         },
       }),
     });
-    cwAgentConfig.grantRead(ssmInstanceRole);
+    cwAgentConfig.grantRead(instanceRole);
 
     // UserData for AppServer (install Apache and set index.html)
     const userdata = ec2.UserData.forLinux({ shebang: '#!/bin/bash' });
     // Install Apache HTTP Server
     userdata.addCommands(
-      'sudo yum -y install httpd',
+      'sudo dnf -y install httpd',
       'sudo systemctl enable httpd',
       'sudo systemctl start httpd',
       'echo "<h1>Hello from $(hostname)</h1>" > /var/www/html/index.html',
@@ -117,7 +118,7 @@ export class Ec2App extends Construct {
     );
     // Install and configure CloudWatch Agent
     userdata.addCommands(
-      'sudo yum -y install amazon-cloudwatch-agent',
+      'sudo dnf -y install amazon-cloudwatch-agent',
       'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:/cloudwatch/agent/ec2/app -s',
     );
     // Set Environment Variables
@@ -125,6 +126,16 @@ export class Ec2App extends Construct {
       `echo "export REDIS_ENDPOINT=$(aws ssm get-parameter --name '/app/redis/endpoint' --query 'Parameter.Value' --output text --region ${cdk.Stack.of(this).region})" >> /etc/profile.d/my_env.sh`,
       `echo "export BUCKET_NAME=${props.s3StaticSiteBucket.bucketName}" >> /etc/profile.d/my_env.sh`,
       `source /etc/profile.d/my_env.sh`
+    );
+    // Install CodeDeploy Agent
+    userdata.addCommands(
+      'sudo dnf -y install ruby wget',
+      'cd /home/ec2-user',
+      'wget https://aws-codedeploy-' + cdk.Stack.of(this).region + '.s3.amazonaws.com/latest/install',
+      'chmod +x ./install',
+      'sudo ./install auto',
+      'sudo systemctl start codedeploy-agent',
+      'sudo systemctl enable codedeploy-agent',
     );
 
     // ------------ AppServers (AutoScaling) ---------------
@@ -150,7 +161,7 @@ export class Ec2App extends Construct {
         },
       ],
       securityGroup: appSg,
-      role: ssmInstanceRole,
+      role: instanceRole,
       userData: userdata,
       healthChecks: autoscaling.HealthChecks.ec2({
         gracePeriod: cdk.Duration.minutes(5),

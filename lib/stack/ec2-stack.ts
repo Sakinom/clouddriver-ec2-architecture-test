@@ -17,6 +17,7 @@ import { AwsConfig } from '../construct/awsconfig';
 import { ElastiCache } from '../construct/elasticache';
 import { GitHubOidc } from '../construct/github-oidc';
 import { Batch } from '../construct/batch';
+import { CodeDeploy } from '../construct/codedeploy';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -178,21 +179,28 @@ export class Ec2Stack extends Stack {
     });
     elasticache.redisEndpointParameter.grantRead(ec2App.appAsg.role);
 
-    // GitHub Actions OIDC設定
-    new GitHubOidc(this, "GitHubOidc", {
-      githubOrganization: props.github.organization,
-      githubRepositories: props.github.repositories,
-      s3Bucket: frontend.staticSiteBucket,
-      cloudfrontDistribution: frontend.distribution,
-      env: props.env,
-    });
-
     // バッチの設定
     new Batch(this, "Batch", {
       vpc: networking.vpc,
       env: props.env,
       dbCluster: datastore.dbCluster,
       dbSecret: datastore.dbSecret,
+    });
+
+    // CodeDeployの設定
+    const codedeploy = new CodeDeploy(this, "CodeDeploy", {
+      description: props.description,
+      asg: ec2App.appAsg,
+    });
+
+    // GitHub Actions OIDC設定
+    new GitHubOidc(this, "GitHubOidc", {
+      githubOrganization: props.github.organization,
+      githubRepositories: props.github.repositories,
+      staticSiteBucket: frontend.staticSiteBucket,
+      deployBucket: codedeploy.deployBucket,
+      cloudfrontDistribution: frontend.distribution,
+      env: props.env,
     });
   }
 }

@@ -56,7 +56,7 @@ export const parameter: EnvironmentParameter = {
     memory: 4096, // 4 GB
   },
   github: {
-    organization: "clouddriver-exam", // TODO: 実際のGitHub組織名に変更する必要がある
+    organization: "Sakinom", // TODO: 実際のGitHub組織名に変更する必要がある
     repositories: ["clouddriver-ec2-architecture-test-app"], // TODO: 実際のリポジトリ名に変更する必要がある
   },
 };

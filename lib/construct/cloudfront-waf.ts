@@ -128,7 +128,6 @@ export class CloudFrontWaf extends Construct {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
-      // TODO: ライフサイクルルールの設定で1年半保持
     });
 
     // WAFログ出力設定

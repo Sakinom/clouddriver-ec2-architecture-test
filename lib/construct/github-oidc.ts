@@ -8,7 +8,8 @@ import { Construct } from "constructs";
 export interface GitHubOidcProps {
   githubOrganization: string;
   githubRepositories: string[];
-  s3Bucket: s3.IBucket;
+  staticSiteBucket: s3.IBucket;
+  deployBucket: s3.IBucket;
   cloudfrontDistribution: cloudfront.IDistribution;
   env: {
     account: string;
@@ -68,7 +69,7 @@ export class GitHubOidc extends Construct {
           "s3:GetBucketLocation",
           "s3:PutObjectAcl",
         ],
-        resources: [props.s3Bucket.bucketArn, `${props.s3Bucket.bucketArn}/*`],
+        resources: [props.staticSiteBucket.bucketArn, `${props.staticSiteBucket.bucketArn}/*`],
       })
     );
 
@@ -81,6 +82,32 @@ export class GitHubOidc extends Construct {
           "cloudfront:ListInvalidations",
         ],
         resources: [props.cloudfrontDistribution.distributionArn],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "S3CodeDeployUploadPermissions",
+        actions: ["s3:PutObject", "s3:GetBucketLocation"],
+        resources: [`${props.deployBucket.bucketArn}/*`],
+      })
+    );
+
+    this.deployRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "CodeDeployActionPermissions",
+        actions: [
+          "codedeploy:CreateDeployment",
+          "codedeploy:GetDeployment",
+          "codedeploy:GetDeploymentConfig",
+          "codedeploy:RegisterApplicationRevision",
+          "codedeploy:GetApplication",
+        ],
+        resources: [
+          `arn:aws:codedeploy:${props.env.region}:${props.env.account}:application:CloudDriverEc2ArchitectureTestApp`,
+          `arn:aws:codedeploy:${props.env.region}:${props.env.account}:deploymentgroup:CloudDriverEc2ArchitectureTestApp/CloudDriverEc2ArchitectureTestDeploymentGroup`,
+          `arn:aws:codedeploy:${props.env.region}:${props.env.account}:deploymentconfig:*`,
+        ],
       })
     );
   }
