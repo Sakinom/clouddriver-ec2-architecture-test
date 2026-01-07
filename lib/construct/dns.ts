@@ -3,7 +3,6 @@ import {
   aws_route53 as route53,
   aws_route53_targets as targets,
 } from "aws-cdk-lib";
-import { ILoadBalancerV2 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import { IDistribution } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 

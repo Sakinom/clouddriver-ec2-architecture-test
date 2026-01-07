@@ -8,6 +8,7 @@ import { aws_autoscaling as autoscaling } from 'aws-cdk-lib';
 import { aws_ssm as ssm } from 'aws-cdk-lib';
 import { aws_logs as logs } from 'aws-cdk-lib';
 import { aws_s3 as s3 } from 'aws-cdk-lib';
+import { aws_rds as rds } from 'aws-cdk-lib';
 
 export interface Ec2AppProps {
   vpc: ec2.IVpc;
@@ -15,6 +16,7 @@ export interface Ec2AppProps {
   publicAlbListener: elbv2.ApplicationListener;
   cloudWatchLogsRetention: logs.RetentionDays;
   s3StaticSiteBucket: s3.IBucket;
+  dbCluster: rds.IDatabaseCluster;
 }
 
 export class Ec2App extends Construct {
@@ -34,6 +36,9 @@ export class Ec2App extends Construct {
     });
     appSg.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.allTcp());
     this.appServerSecurityGroup = appSg;
+
+    // EC2アプリケーションにDB接続情報を付与
+    props.dbCluster.connections.allowDefaultPortFrom(appSg);
 
     // ------------ CloudWatch Log Group ---------------
 

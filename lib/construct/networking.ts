@@ -123,10 +123,15 @@ export class Networking extends Construct {
       ruleAction: ec2.Action.ALLOW,
     });
 
-    // VPC Endpoint for S3
+    // VPC Endpoints
     vpc.addGatewayEndpoint('S3GWEndpoint', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
       subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
+    });
+    vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      privateDnsEnabled: true,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
     });
   }
 }

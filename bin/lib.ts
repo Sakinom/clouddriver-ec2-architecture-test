@@ -3,7 +3,6 @@ import * as cdk from 'aws-cdk-lib/core';
 import { CloudFrontWafStack } from '../lib/stack/cloudfront-waf-stack';
 import { Ec2Stack } from '../lib/stack/ec2-stack';
 import { parameter } from '../parameter';
-import { BatchStack } from '../lib/stack/batch-stack';
 
 const app = new cdk.App();
 
@@ -38,9 +37,4 @@ new Ec2Stack(app, `Ec2Stack`, {
   appService: parameter.appService,
   webAclArn: parameter.webAclArn,
   github: parameter.github,
-});
-
-new BatchStack(app, `BatchStack`, {
-  env: parameter.env,
-  description: "Batch Stack for Daily Batch Job",
 });

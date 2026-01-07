@@ -16,6 +16,7 @@ import { GuardDuty } from '../construct/guardduty';
 import { AwsConfig } from '../construct/awsconfig';
 import { ElastiCache } from '../construct/elasticache';
 import { GitHubOidc } from '../construct/github-oidc';
+import { Batch } from '../construct/batch';
 
 export interface Ec2StackProps extends StackProps {
   env: {
@@ -127,6 +128,7 @@ export class Ec2Stack extends Stack {
       publicAlbListener: loadBalancer.publicAlbListener,
       cloudWatchLogsRetention: props.cloudWatchLogsRetention,
       s3StaticSiteBucket: frontend.staticSiteBucket,
+      dbCluster: datastore.dbCluster,
     });
 
     // CloudTrailの設定
@@ -183,6 +185,14 @@ export class Ec2Stack extends Stack {
       s3Bucket: frontend.staticSiteBucket,
       cloudfrontDistribution: frontend.distribution,
       env: props.env,
+    });
+
+    // バッチの設定
+    new Batch(this, "Batch", {
+      vpc: networking.vpc,
+      env: props.env,
+      dbCluster: datastore.dbCluster,
+      dbSecret: datastore.dbSecret,
     });
   }
 }
