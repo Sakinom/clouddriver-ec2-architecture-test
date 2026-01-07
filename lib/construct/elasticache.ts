@@ -37,6 +37,7 @@ export class ElastiCache extends Construct {
       cacheSubnetGroupName: subnetGroup.ref,
       securityGroupIds: [elasticacheSg.securityGroupId],
       multiAzEnabled: true,
+      atRestEncryptionEnabled: true,
     });
     redis.addDependency(subnetGroup);
 
