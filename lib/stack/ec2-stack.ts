@@ -107,16 +107,27 @@ export class Ec2Stack extends Stack {
       env: props.env,
     });
 
+    // CloudFront WAFのARNをプロパティから取得
+    const cloudfrontWebAclArn = props.webAclArn;
+
+    // フロントエンドの設定
+    const frontend = new Frontend(this, "Frontend", {
+      bucketLogRetention: props.bucketLogRetention,
+      publicAlb: loadBalancer.publicAlb,
+      cloudfrontWebAclArn: cloudfrontWebAclArn,
+      domainName: props.domainName,
+      cloudfrontCertificate: props.cloudfrontCertificate,
+      s3AccessLogBucket: s3AccessLogBucket,
+    });
+
     // EC2アプリケーションの設定
     const ec2App = new Ec2App(this, "Ec2App", {
       vpc: networking.vpc,
       cmk: cmk,
       publicAlbListener: loadBalancer.publicAlbListener,
       cloudWatchLogsRetention: props.cloudWatchLogsRetention,
+      s3StaticSiteBucket: frontend.staticSiteBucket,
     });
-
-    // CloudFront WAFのARNをプロパティから取得
-    const cloudfrontWebAclArn = props.webAclArn;
 
     // CloudTrailの設定
     const cloudTrail = new CloudTrail(this, "CloudTrail", {
@@ -139,16 +150,6 @@ export class Ec2Stack extends Stack {
     new Canary(this, "Canary", {
       canaryUrl: props.canaryUrl,
       snsTopic: monitoring.snsTopic,
-      s3AccessLogBucket: s3AccessLogBucket,
-    });
-
-    // フロントエンドの設定
-    const frontend = new Frontend(this, "Frontend", {
-      bucketLogRetention: props.bucketLogRetention,
-      publicAlb: loadBalancer.publicAlb,
-      cloudfrontWebAclArn: cloudfrontWebAclArn,
-      domainName: props.domainName,
-      cloudfrontCertificate: props.cloudfrontCertificate,
       s3AccessLogBucket: s3AccessLogBucket,
     });
 

@@ -7,12 +7,14 @@ import { aws_kms as kms } from 'aws-cdk-lib';
 import { aws_autoscaling as autoscaling } from 'aws-cdk-lib';
 import { aws_ssm as ssm } from 'aws-cdk-lib';
 import { aws_logs as logs } from 'aws-cdk-lib';
+import { aws_s3 as s3 } from 'aws-cdk-lib';
 
 export interface Ec2AppProps {
   vpc: ec2.IVpc;
   cmk: kms.IKey;
   publicAlbListener: elbv2.ApplicationListener;
   cloudWatchLogsRetention: logs.RetentionDays;
+  s3StaticSiteBucket: s3.IBucket;
 }
 
 export class Ec2App extends Construct {
@@ -25,7 +27,7 @@ export class Ec2App extends Construct {
 
     // --- Security Groups ---
 
-    //Security Group for Instance of App
+    // Security Group for Instance of App
     const appSg = new ec2.SecurityGroup(this, 'AppSg', {
       vpc: props.vpc,
       allowAllOutbound: false,
@@ -53,6 +55,10 @@ export class Ec2App extends Construct {
         iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
       ],
     });
+
+    // Grant read access to S3 Static Site Bucket
+    props.s3StaticSiteBucket.grantReadWrite(ssmInstanceRole);
+
     const cwAgentConfig = new ssm.StringParameter(this, 'CwAgentConfig', {
       parameterName: '/cloudwatch/agent/ec2/app',
       stringValue: JSON.stringify({
@@ -80,6 +86,7 @@ export class Ec2App extends Construct {
 
     // UserData for AppServer (install Apache and set index.html)
     const userdata = ec2.UserData.forLinux({ shebang: '#!/bin/bash' });
+    // Install Apache HTTP Server
     userdata.addCommands(
       'sudo yum -y install httpd',
       'sudo systemctl enable httpd',
@@ -87,12 +94,16 @@ export class Ec2App extends Construct {
       'echo "<h1>Hello from $(hostname)</h1>" > /var/www/html/index.html',
       'chown apache.apache /var/www/html/index.html',
     );
+    // Install and configure CloudWatch Agent
     userdata.addCommands(
       'sudo yum -y install amazon-cloudwatch-agent',
       'sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:/cloudwatch/agent/ec2/app -s',
     );
+    // Set Environment Variables
     userdata.addCommands(
-      `export REDIS_ENDPOINT=$(aws ssm get-parameter --name "/app/redis/endpoint" --query "Parameter.Value" --output text --region ${cdk.Stack.of(this).region})`
+      `echo "export REDIS_ENDPOINT=$(aws ssm get-parameter --name '/app/redis/endpoint' --query 'Parameter.Value' --output text --region ${cdk.Stack.of(this).region})" >> /etc/profile.d/my_env.sh`,
+      `echo "export BUCKET_NAME=${props.s3StaticSiteBucket.bucketName}" >> /etc/profile.d/my_env.sh`,
+      `source /etc/profile.d/my_env.sh`
     );
 
     // ------------ AppServers (AutoScaling) ---------------
