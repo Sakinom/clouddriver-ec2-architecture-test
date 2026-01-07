@@ -40,18 +40,6 @@ export class ElastiCache extends Construct {
     });
     redis.addDependency(subnetGroup);
 
-    // const replicaScalableTarget = new appscaling.ScalableTarget(this, 'ElastiCacheRedisReplicasScalableTarget', {
-    //   serviceNamespace: appscaling.ServiceNamespace.ELASTICACHE,
-    //   scalableDimension: 'elasticache:replication-group:Replicas',
-    //   minCapacity: 1,
-    //   maxCapacity: 5,
-    //   resourceId: `replication-group/${redis.ref}`,
-    // });
-    // replicaScalableTarget.scaleToTrackMetric('ElastiCacheRedisReplicasCPUUtilization', {
-    //   targetValue: 50,
-    //   predefinedMetric: appscaling.PredefinedMetric.ELASTICACHE_PRIMARY_ENGINE_CPU_UTILIZATION,
-    // });
-
     const redisEndpointParameter = new ssm.StringParameter(this, 'RedisEndpointParam', {
       parameterName: '/app/redis/endpoint',
       stringValue: redis.attrPrimaryEndPointAddress,
