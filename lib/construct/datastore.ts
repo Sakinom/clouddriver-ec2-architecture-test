@@ -87,7 +87,7 @@ export class Datastore extends Construct {
     //   serviceNamespace: autoscaling.ServiceNamespace.RDS,
     //   scalableDimension: 'rds:cluster:ReadReplicaCount',
     //   resourceId: `cluster:${cluster.clusterIdentifier}`,
-    //   minCapacity: 0,
+    //   minCapacity: 1,
     //   maxCapacity: 4,
     // });
     // scalableTarget.node.addDependency(cluster);
