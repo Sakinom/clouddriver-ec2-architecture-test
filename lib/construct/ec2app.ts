@@ -109,6 +109,18 @@ export class Ec2App extends Construct {
 
     // UserData for AppServer (install Apache and set index.html)
     const userdata = ec2.UserData.forLinux({ shebang: '#!/bin/bash' });
+
+    // Parameters for initialize.sh
+    const dbHostWriter = props.dbCluster.clusterEndpoint.hostname;
+    const dbHostReader = props.dbCluster.clusterReadEndpoint.hostname;
+    /* 以下で対応できなかったため、テストにつき安全ではない方法を使用
+    - const dbUser = props.dbSecret.secretValueFromJson('username').unsafeUnwrap();
+    - const dbPass = props.dbSecret.secretValueFromJson('password').unsafeUnwrap();
+    */
+    const dbUser = 'dbadmin';
+    const dbPass = 'KynBA92.y1AtgN=0qxlugrLh8LKCOa';
+    const examineeId = props.examineeId;
+
     // Quit nginx if installed
     userdata.addCommands(
       'sudo systemctl stop nginx',
@@ -141,17 +153,6 @@ export class Ec2App extends Construct {
       'sudo systemctl start codedeploy-agent',
       'sudo systemctl enable codedeploy-agent',
     );
-
-    // Parameters for initialize.sh
-    const dbHostWriter = props.dbCluster.clusterEndpoint.hostname;
-    const dbHostReader = props.dbCluster.clusterReadEndpoint.hostname;
-    /* 以下で対応できなかったため、テストにつき安全ではない方法を使用 */
-    // const dbUser = props.dbSecret.secretValueFromJson('username').unsafeUnwrap();
-    // const dbPass = props.dbSecret.secretValueFromJson('password').unsafeUnwrap();
-    const dbUser = 'dbadmin';
-    const dbPass = 'KynBA92.y1AtgN=0qxlugrLh8LKCOa';
-    const examineeId = props.examineeId;
-
     userdata.addCommands(
       `cat <<EOF > /var/lib/cloud/scripts/per-boot/initialize_db.sh`,
       `#!/bin/bash`,

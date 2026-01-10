@@ -186,7 +186,6 @@ export class Ec2Stack extends Stack {
       vpc: networking.vpc,
       env: props.env,
       dbCluster: datastore.dbCluster,
-      dbSecret: datastore.dbSecret,
     });
 
     // CodeDeployの設定
