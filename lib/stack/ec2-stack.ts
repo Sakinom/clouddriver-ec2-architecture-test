@@ -48,6 +48,7 @@ export interface Ec2StackProps extends StackProps {
     organization: string;
     repositories: string[];
   };
+  examineeId: string;
 }
 
 export class Ec2Stack extends Stack {
@@ -130,6 +131,7 @@ export class Ec2Stack extends Stack {
       cloudWatchLogsRetention: props.cloudWatchLogsRetention,
       s3StaticSiteBucket: frontend.staticSiteBucket,
       dbCluster: datastore.dbCluster,
+      examineeId: props.examineeId,
     });
 
     // CloudTrailの設定

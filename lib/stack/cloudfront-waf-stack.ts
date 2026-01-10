@@ -1,4 +1,4 @@
-import { Stack, StackProps, aws_s3 as s3 } from "aws-cdk-lib";
+import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { CloudFrontWaf } from "../construct/cloudfront-waf";
 

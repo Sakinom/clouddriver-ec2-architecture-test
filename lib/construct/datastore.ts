@@ -57,13 +57,13 @@ export class Datastore extends Construct {
       parameterGroup: parameterGroup,
       credentials: rds.Credentials.fromGeneratedSecret('dbadmin'),
       writer: rds.ClusterInstance.provisioned('Instance1', {
-        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
+        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MEDIUM),
         instanceIdentifier: `datastore-aurora-instance-${props.env.account}`,
         enablePerformanceInsights: false,
       }),
       readers: [
         rds.ClusterInstance.provisioned('ReaderInstance1', {
-          instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
+          instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MEDIUM),
           instanceIdentifier: `datastore-aurora-reader-instance-${props.env.account}`,
           enablePerformanceInsights: false,
         }),

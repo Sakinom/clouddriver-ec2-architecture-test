@@ -28,6 +28,11 @@ export interface EnvironmentParameter {
     organization: string;
     repositories: string[];
   };
+  examineeId: string;
+  tag: {
+    key: string;
+    value: string;
+  };
 }
 
 export const parameter: EnvironmentParameter = {
@@ -45,7 +50,7 @@ export const parameter: EnvironmentParameter = {
   cloudWatchLogsRetention: 3,
   bucketLogRetention: 30,
   cloudTrailLogRetention: 90, // ステージング環境は90日保持
-  notificationRecipientEmail: "sakinom328@gmail.com",
+  notificationRecipientEmail: "sakino.miki@posse-ap.com",
   canaryUrl: "https://00770.clouddriver-exam.net/",
   datastore: {
     backupRetentionDays: 1,
@@ -58,5 +63,10 @@ export const parameter: EnvironmentParameter = {
   github: {
     organization: "Sakinom", // TODO: 実際のGitHub組織名に変更する必要がある
     repositories: ["clouddriver-ec2-architecture-test-app"], // TODO: 実際のリポジトリ名に変更する必要がある
+  },
+  examineeId: "00770",
+  tag: {
+    key: "aws-exam-resource",
+    value: "true",
   },
 };

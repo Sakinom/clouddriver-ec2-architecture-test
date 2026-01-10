@@ -17,6 +17,7 @@ export interface Ec2AppProps {
   cloudWatchLogsRetention: logs.RetentionDays;
   s3StaticSiteBucket: s3.IBucket;
   dbCluster: rds.IDatabaseCluster;
+  examineeId: string;
 }
 
 export class Ec2App extends Construct {
@@ -108,13 +109,16 @@ export class Ec2App extends Construct {
 
     // UserData for AppServer (install Apache and set index.html)
     const userdata = ec2.UserData.forLinux({ shebang: '#!/bin/bash' });
+    // Quit nginx if installed
+    userdata.addCommands(
+      'sudo systemctl stop nginx',
+      'sudo systemctl disable nginx',
+    );
     // Install Apache HTTP Server
     userdata.addCommands(
       'sudo dnf -y install httpd',
       'sudo systemctl enable httpd',
       'sudo systemctl start httpd',
-      'echo "<h1>Hello from $(hostname)</h1>" > /var/www/html/index.html',
-      'chown apache.apache /var/www/html/index.html',
     );
     // Install and configure CloudWatch Agent
     userdata.addCommands(
@@ -138,6 +142,39 @@ export class Ec2App extends Construct {
       'sudo systemctl enable codedeploy-agent',
     );
 
+    // Parameters for initialize.sh
+    const dbHostWriter = props.dbCluster.clusterEndpoint.hostname;
+    const dbHostReader = props.dbCluster.clusterReadEndpoint.hostname;
+    /* 以下で対応できなかったため、テストにつき安全ではない方法を使用 */
+    // const dbUser = props.dbSecret.secretValueFromJson('username').unsafeUnwrap();
+    // const dbPass = props.dbSecret.secretValueFromJson('password').unsafeUnwrap();
+    const dbUser = 'dbadmin';
+    const dbPass = 'KynBA92.y1AtgN=0qxlugrLh8LKCOa';
+    const examineeId = props.examineeId;
+
+    userdata.addCommands(
+      `cat <<EOF > /var/lib/cloud/scripts/per-boot/initialize_db.sh`,
+      `#!/bin/bash`,
+      `/home/ec2-user/initialize.sh ${dbHostWriter} ${dbHostReader} ${dbUser} ${dbPass} ${examineeId}`,
+      `EOF`,
+
+      `chmod +x /var/lib/cloud/scripts/per-boot/initialize_db.sh`,
+      `/var/lib/cloud/scripts/per-boot/initialize_db.sh`,
+      `sudo sed -i 's|"/var/www/html"|"/opt/clouddriver"|g' /etc/httpd/conf/httpd.conf`,
+      `sudo sed -i 's|<Directory "/var/www">|<Directory "/opt/clouddriver">|g' /etc/httpd/conf/httpd.conf`,
+      `sudo sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/g' /etc/httpd/conf/httpd.conf`,
+
+      `cat <<EOF > /etc/httpd/conf.d/rewrite_html.conf`,
+      `<Directory "/opt/clouddriver">`,
+      `    RewriteEngine On`,
+      `    RewriteRule ^index\\.html$ index.php [L]`,
+      `</Directory>`,
+      `EOF`,
+
+      `sudo chown -R apache:apache /opt/clouddriver`,
+      `sudo systemctl restart httpd`,
+    );
+
     // ------------ AppServers (AutoScaling) ---------------
 
     // Auto Scaling Group for AppServers
@@ -148,8 +185,10 @@ export class Ec2App extends Construct {
       vpcSubnets: props.vpc.selectSubnets({
         subnetGroupName: 'Private',
       }),
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.SMALL),
+      machineImage: ec2.MachineImage.genericLinux({
+        [cdk.Stack.of(this).region]: 'ami-064e45c10b48b8151',
+      }),
       blockDevices: [
         {
           deviceName: '/dev/xvda',

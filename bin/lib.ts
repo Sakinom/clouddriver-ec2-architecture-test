@@ -19,8 +19,9 @@ const cloudfrontWafStack = new CloudFrontWafStack(
     description: `CloudFront WAF Stack`,
   }
 );
+cdk.Tags.of(cloudfrontWafStack).add(parameter.tag.key, parameter.tag.value);
 
-new Ec2Stack(app, `Ec2Stack`, {
+const ec2Stack = new Ec2Stack(app, `Ec2Stack`, {
   env: parameter.env,
   description: parameter.description,
   vpcCidr: parameter.vpcCidr,
@@ -37,4 +38,6 @@ new Ec2Stack(app, `Ec2Stack`, {
   appService: parameter.appService,
   webAclArn: parameter.webAclArn,
   github: parameter.github,
+  examineeId: parameter.examineeId,
 });
+cdk.Tags.of(ec2Stack).add(parameter.tag.key, parameter.tag.value);
