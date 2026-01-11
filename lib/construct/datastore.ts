@@ -7,7 +7,6 @@ import {
   aws_iam as iam,
   RemovalPolicy,
   Duration,
-  aws_applicationautoscaling as autoscaling,
 } from 'aws-cdk-lib';
 import { IDatabaseCluster } from 'aws-cdk-lib/aws-rds';
 import { Construct } from 'constructs';
