@@ -15,7 +15,7 @@ export class CodeDeploy extends Construct {
 
     const deployBucket = new s3.Bucket(this, "DeployBucket", {
       bucketName: `deploy-artifacts-${cdk.Aws.ACCOUNT_ID}`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
     });

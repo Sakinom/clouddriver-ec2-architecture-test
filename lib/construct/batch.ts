@@ -23,7 +23,7 @@ export class Batch extends Construct {
 
     const outputBucket = new s3.Bucket(this, "OutputBucket", {
       bucketName: `batch-outputs-${props.env.account}`,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     const batchInstanceSg = new ec2.SecurityGroup(this, "LambdaSg", {

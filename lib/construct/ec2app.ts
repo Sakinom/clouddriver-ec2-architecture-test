@@ -46,7 +46,7 @@ export class Ec2App extends Construct {
     const appLogGroup = new logs.LogGroup(this, 'HttpdErrorLogGroup', {
       logGroupName: '/ec2/app/httpd/error',
       retention: props.cloudWatchLogsRetention,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
     this.appLogGroup = appLogGroup;
 

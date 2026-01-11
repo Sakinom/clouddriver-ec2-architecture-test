@@ -38,7 +38,7 @@ export class CloudTrail extends Construct {
           noncurrentVersionExpiration: Duration.days(1),
         },
       ],
-      removalPolicy: RemovalPolicy.DESTROY, // TODO: 開発環境用。本番では RETAIN を推奨
+      removalPolicy: RemovalPolicy.RETAIN,
       serverAccessLogsBucket: props.s3AccessLogBucket,
       serverAccessLogsPrefix: "cloudtrail-log-bucket-access-logs/",
     });
@@ -104,7 +104,7 @@ export class CloudTrail extends Construct {
     this.cloudWatchLogGroup = new LogGroup(this, "CloudTrailLogGroup", {
       logGroupName: `/aws/cloudtrail/${props.env.account}`,
       retention: RetentionDays.ONE_YEAR,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     // CloudTrailがCloudWatch Logsに書き込むためのIAMロールを作成

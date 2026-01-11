@@ -70,7 +70,7 @@ export class LoadBalancer extends Construct {
       accessControl: s3.BucketAccessControl.PRIVATE,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // TODO: 本番環境ではRETAINに変更
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       enforceSSL: true,
       lifecycleRules: [
         {

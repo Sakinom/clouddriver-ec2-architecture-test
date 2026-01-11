@@ -32,8 +32,7 @@ export class AwsConfig extends Construct {
           abortIncompleteMultipartUploadAfter: Duration.days(7),
         },
       ],
-      removalPolicy: RemovalPolicy.DESTROY, // TODO: 本番環境ではRETAINに変更する
-      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     // IAM Role for AWS Config

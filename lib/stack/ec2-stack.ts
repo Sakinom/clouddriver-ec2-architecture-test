@@ -74,7 +74,7 @@ export class Ec2Stack extends Stack {
           expiration: Duration.days(props.bucketLogRetention),
         },
       ],
-      removalPolicy: RemovalPolicy.DESTROY, // TODO: 確定したらRETAINに変更
+      removalPolicy: RemovalPolicy.RETAIN,
       enforceSSL: true,
     });
 

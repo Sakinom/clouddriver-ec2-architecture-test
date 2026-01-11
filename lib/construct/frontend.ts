@@ -29,7 +29,7 @@ export class Frontend extends Construct {
     // フロントエンド用S3バケットの作成
     this.staticSiteBucket = new s3.Bucket(this, "StaticSiteBucket", {
       accessControl: s3.BucketAccessControl.PRIVATE,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       versioned: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -50,7 +50,7 @@ export class Frontend extends Construct {
       accessControl: s3.BucketAccessControl.PRIVATE,
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // TODO: 本番環境ではRETAINに変更
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       enforceSSL: true,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
       lifecycleRules: [
@@ -101,7 +101,7 @@ export class Frontend extends Construct {
             this.staticSiteBucket
           ),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // TODO: CACHING_OPTIMIZEDに変更する
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           compress: true,
           responseHeadersPolicy: securityHeadersPolicy,
         },

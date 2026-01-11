@@ -26,8 +26,7 @@ export class Canary extends Construct {
     // Canaryの成果物保存用S3バケット
     this.artifactsBucket = new s3.Bucket(this, 'CanaryArtifactsBucket', {
       bucketName: `canary-artifacts-${cdk.Aws.ACCOUNT_ID}`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       lifecycleRules: [
         {
           id: 'DeleteOldArtifacts',

@@ -69,7 +69,7 @@ export class Datastore extends Construct {
         }),
       ],
       vpc: props.vpc,
-      removalPolicy: RemovalPolicy.DESTROY, // TODO: RETAINに変更する
+      removalPolicy: RemovalPolicy.RETAIN,
       defaultDatabaseName: `db_${props.env.account}`,
       storageEncrypted: true,
       storageEncryptionKey: props.cmk,
@@ -113,7 +113,7 @@ export class Datastore extends Construct {
     const backupVault = new backup.BackupVault(this, 'BackupVault', {
       backupVaultName: `backup-vault-${props.env.account}`,
       encryptionKey: props.cmk,
-      removalPolicy: RemovalPolicy.DESTROY, // TODO: 本番環境ではRETAINに変更する
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     // Backup Plan（バックアップ計画）
